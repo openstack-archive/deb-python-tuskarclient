@@ -1,2 +1,2 @@
 version=3
-https://github.com/stackforge/python-tuskarclient/tags .*/(\d[\d\.]+)\.tar\.gz
+https://github.com/openstack/python-tuskarclient/tags .*/(\d[\d\.]+)\.tar\.gz
