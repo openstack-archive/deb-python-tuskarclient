@@ -1,0 +1,13 @@
+#!/usr/bin/make -f
+
+UPSTREAM_GIT = git://github.com/openstack/python-tuskarclient.git
+include /usr/share/openstack-pkg-tools/pkgos.make
+export OSLO_PACKAGE_VERSION=$(VERSION)
+
+%:
+	dh $@  --with python2 --buildsystem=python_distutils
+
+override_dh_auto_test:
+ifeq (,$(filter nocheck,$(DEB_BUILD_OPTIONS)))
+	python setup.py testr --slowest --testr-args='--subunit  '
+endif

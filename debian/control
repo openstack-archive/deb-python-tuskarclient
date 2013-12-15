@@ -1,0 +1,58 @@
+Source: python-tuskarclient
+Section: python
+Priority: extra
+Maintainer: PKG OpenStack <openstack-devel@lists.alioth.debian.org>
+Uploaders: Julien Danjou <acid@debian.org>,
+           Thomas Goirand <zigo@debian.org>,
+           Ghe Rivero <ghe.rivero@stackops.com>
+Build-Depends: debhelper (>= 9),
+               openstack-pkg-tools,
+               python-all (>= 2.6.6-3~),
+               python-pbr (>= 0.5.21)
+Build-Depends-Indep: python-coverage (>= 3.6),
+                     python-fixtures (>= 0.3.12),
+                     python-iso8601,
+                     python-keystoneclient (>= 1:0.4.1),
+                     python-mock,
+                     python-prettytable,
+                     python-requests (>= 0.8),
+                     python-simplejson,
+                     python-six (>=1.4.1),
+                     python-testtools (>= 0.9.26),
+                     python-sphinx (>= 1.1.2),
+                     testrepository (>= 0.0.13)
+Standards-Version: 3.9.4
+Homepage: https://github.com/stackforge/python-tuskarclient
+Vcs-Git: git://anonscm.debian.org/openstack/python-tuskarclient.git
+Vcs-Browser: http://anonscm.debian.org/gitweb/?p=openstack/python-tuskarclient.git;a=summary
+
+Package: python-tuskarclient
+Architecture: all
+Pre-Depends: dpkg (>= 1.15.6~)
+Depends: python-iso8601,
+         python-keystoneclient (>= 1:0.4.1),
+         python-prettytable,
+         python-requests (>= 0.8),
+         python-simplejson,
+         python-six (>=1.4.1),
+         ${misc:Depends},
+         ${python:Depends}
+Description: control how and where OpenStack services are deployed - client
+ Tuskar gives administrators the ability to control how and where OpenStack
+ services are deployed across the datacenter. Using Tuskar, administrators
+ divide hardware into "resource classes" that allow predictable elastic scaling
+ as cloud demands grow. This resource orchestration allows Tuskar users to
+ ensure SLAs, improve performance, and maximize utilization across the
+ datacenter.
+ .
+ Tuskar services are available via a RESTful API and management console through
+ which administrators are able to classify their hardware and define their
+ datacenters. In addition, Tuskar components provide administrators with
+ performance monitoring, health statistics, and usage metrics, aiding in
+ capacity planning and hardware procurement decisions.
+ .
+ This is a client for the OpenStack Tuskar API. There's a Python API
+ (the "tuskarclient" module), and a command-line script ("tuskar").
+ .
+ Installing this package gets you a shell command, that you can use to
+ interact with Tuskar's API.
