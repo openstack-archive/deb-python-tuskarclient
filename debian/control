@@ -9,18 +9,22 @@ Build-Depends: debhelper (>= 9),
                openstack-pkg-tools,
                python-all (>= 2.6.6-3~),
                python-pbr (>= 0.5.21)
-Build-Depends-Indep: python-coverage (>= 3.6),
-                     python-fixtures (>= 0.3.12),
-                     python-iso8601,
+Build-Depends-Indep: python-babel (>= 1.3),
+                     python-coverage (>= 3.6),
+                     python-fixtures (>= 0.3.14),
+                     python-hacking (>= 0.8),
+                     python-iso8601 (>= 0.1.8),
                      python-keystoneclient (>= 1:0.4.1),
-                     python-mock,
+                     python-mock (>= 1.0),
                      python-prettytable,
-                     python-requests (>= 0.8),
+                     python-requests (>= 1.1),
+                     python-stevedore (>= 0.12),
                      python-simplejson,
                      python-six (>=1.4.1),
-                     python-testtools (>= 0.9.26),
+                     python-testtools (>= 0.9.32),
                      python-sphinx (>= 1.1.2),
-                     testrepository (>= 0.0.13)
+                     python-sphinxcontrib-pecanwsme (>= 0.5),
+                     testrepository (>= 0.0.17)
 Standards-Version: 3.9.4
 Homepage: https://github.com/openstack/python-tuskarclient
 Vcs-Git: git://anonscm.debian.org/openstack/python-tuskarclient.git
@@ -29,10 +33,12 @@ Vcs-Browser: http://anonscm.debian.org/gitweb/?p=openstack/python-tuskarclient.g
 Package: python-tuskarclient
 Architecture: all
 Pre-Depends: dpkg (>= 1.15.6~)
-Depends: python-iso8601,
+Depends: python-babel (>= 1.3),
+         python-iso8601 (>= 0.1.8),
          python-keystoneclient (>= 1:0.4.1),
          python-prettytable,
-         python-requests (>= 0.8),
+         python-requests (>= 1.1),
+         python-stevedore (>= 0.12),
          python-simplejson,
          python-six (>=1.4.1),
          ${misc:Depends},
