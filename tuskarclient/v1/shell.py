@@ -11,12 +11,12 @@
 #    under the License.
 
 from tuskarclient.common import utils
-from tuskarclient.v1 import flavors_shell
-from tuskarclient.v1 import racks_shell
+from tuskarclient.v1 import overcloud_roles_shell
+from tuskarclient.v1 import overclouds_shell
 
 COMMAND_MODULES = [
-    flavors_shell,
-    racks_shell,
+    overcloud_roles_shell,
+    overclouds_shell
 ]
 
 

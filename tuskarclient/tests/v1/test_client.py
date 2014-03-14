@@ -25,7 +25,8 @@ class HasManager(object):
             return ManagerClassMismatch(client, self.cls_name, self.attr_name)
 
         obj = getattr(client, self.attr_name)
-        if (client != obj.api or self.cls_name != obj.__class__.__name__):
+        if (client.http_client != obj.api or
+           self.cls_name != obj.__class__.__name__):
             return ManagerClassMismatch(client, self.cls_name, self.attr_name)
         else:
             return None
@@ -54,12 +55,7 @@ class ClientTest(tutils.TestCase):
         self.client = client.Client(self.endpoint)
 
     def test_managers_present(self):
-        self.assertThat(self.client, HasManager('RackManager', 'racks'))
-        self.assertThat(self.client, HasManager('ResourceClassManager',
-                                                'resource_classes'))
-        self.assertThat(self.client, HasManager('NodeManager', 'nodes'))
-        self.assertThat(self.client, HasManager('FlavorManager', 'flavors'))
-        self.assertThat(self.client, HasManager('DataCenterManager',
-                                                'data_centers'))
+        self.assertThat(self.client, HasManager('OvercloudRoleManager',
+                                                'overcloud_roles'))
         self.assertThat(self.client, HasManager('OvercloudManager',
                                                 'overclouds'))

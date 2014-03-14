@@ -11,15 +11,11 @@
 #    under the License.
 
 from tuskarclient.common import http
-from tuskarclient.v1 import data_centers
-from tuskarclient.v1 import flavors
-from tuskarclient.v1 import nodes
+from tuskarclient.v1 import overcloud_roles
 from tuskarclient.v1 import overclouds
-from tuskarclient.v1 import racks
-from tuskarclient.v1 import resource_classes
 
 
-class Client(http.HTTPClient):
+class Client(object):
     """Client for the Tuskar v1 HTTP API.
 
     :param string endpoint: Endpoint URL for the tuskar service.
@@ -28,10 +24,7 @@ class Client(http.HTTPClient):
     """
 
     def __init__(self, *args, **kwargs):
-        super(Client, self).__init__(*args, **kwargs)
-        self.racks = racks.RackManager(self)
-        self.resource_classes = resource_classes.ResourceClassManager(self)
-        self.flavors = flavors.FlavorManager(self)
-        self.nodes = nodes.NodeManager(self)
-        self.data_centers = data_centers.DataCenterManager(self)
-        self.overclouds = overclouds.OvercloudManager(self)
+        self.http_client = http.HTTPClient(*args, **kwargs)
+        self.overcloud_roles = overcloud_roles.OvercloudRoleManager(
+            self.http_client)
+        self.overclouds = overclouds.OvercloudManager(self.http_client)

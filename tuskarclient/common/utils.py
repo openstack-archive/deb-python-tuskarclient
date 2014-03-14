@@ -13,11 +13,13 @@
 #    License for the specific language governing permissions and limitations
 #    under the License.
 
+from __future__ import print_function
+
 import os
 import sys
 import uuid
 
-from tuskarclient import exc
+from tuskarclient.openstack.common.apiclient import exceptions as exc
 from tuskarclient.openstack.common import importutils
 
 
@@ -134,5 +136,65 @@ def import_versioned_module(version, submodule=None):
 
 def exit(msg=''):
     if msg:
-        print >> sys.stderr, msg
+        print(msg, file=sys.stderr)
     sys.exit(1)
+
+
+def format_attributes(params):
+    '''Reformat attributes into dict of format expected by the API.'''
+
+    if not params:
+        return {}
+
+    # expect multiple invocations of --parameters but fall back
+    # to ; delimited if only one --parameters is specified
+    if len(params) == 1:
+        params = params[0].split(';')
+
+    parameters = {}
+    for p in params:
+        try:
+            (n, v) = p.split(('='), 1)
+        except ValueError:
+            msg = '%s(%s). %s.' % ('Malformed parameter', p,
+                                   'Use the key=value format')
+            raise exc.CommandError(msg)
+
+        if n not in parameters:
+            parameters[n] = v
+        else:
+            if not isinstance(parameters[n], list):
+                parameters[n] = [parameters[n]]
+            parameters[n].append(v)
+
+    return parameters
+
+
+def format_roles(params):
+    '''Reformat attributes into dict of format expected by the API.'''
+
+    if not params:
+        return []
+
+    # expect multiple invocations of --parameters but fall back
+    # to ; delimited if only one --parameters is specified
+    if len(params) == 1:
+        params = params[0].split(';')
+
+    parameters = []
+    for p in params:
+        try:
+            (n, v) = p.split(('='), 1)
+        except ValueError:
+            msg = '%s(%s). %s.' % ('Malformed parameter', p,
+                                   'Use the key=value format')
+            raise exc.CommandError(msg)
+
+        v = int(v)
+
+        parameters.append({
+            'overcloud_role_id': n,
+            'num_nodes': v
+        })
+
+    return parameters
