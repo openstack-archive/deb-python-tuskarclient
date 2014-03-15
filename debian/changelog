@@ -1,3 +1,9 @@
+python-tuskarclient (0.1.1-2) experimental; urgency=low
+
+  * Fixed install of the python module.
+
+ -- Thomas Goirand <zigo@debian.org>  Sat, 15 Mar 2014 10:52:24 +0800
+
 python-tuskarclient (0.1.1-1) experimental; urgency=low
 
   * Initial release (Closes: #732181)
