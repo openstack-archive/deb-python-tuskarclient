@@ -1,3 +1,9 @@
+python-tuskarclient (0.1.1-3) experimental; urgency=low
+
+  * Added BSD license of doc/source/_static/nature.css.
+
+ -- Thomas Goirand <zigo@debian.org>  Wed, 19 Mar 2014 22:12:51 +0800
+
 python-tuskarclient (0.1.1-2) experimental; urgency=low
 
   * Fixed install of the python module.
