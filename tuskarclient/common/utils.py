@@ -20,13 +20,14 @@ import sys
 import uuid
 
 from tuskarclient.openstack.common.apiclient import exceptions as exc
+from tuskarclient.openstack.common.gettextutils import _
 from tuskarclient.openstack.common import importutils
 
 
 def define_commands_from_module(subparsers, command_module):
-    '''Find all methods beginning with 'do_' in a module, and add them
+    """Find all methods beginning with 'do_' in a module, and add them
     as commands into a subparsers collection.
-    '''
+    """
     for method_name in (a for a in dir(command_module) if a.startswith('do_')):
         # Commands should be hypen-separated instead of underscores.
         command = method_name[3:].replace('_', '-')
@@ -35,12 +36,12 @@ def define_commands_from_module(subparsers, command_module):
 
 
 def define_command(subparsers, command, callback):
-    '''Define a command in the subparsers collection.
+    """Define a command in the subparsers collection.
 
     :param subparsers: subparsers collection where the command will go
     :param command: command name
     :param callback: function that will be used to process the command
-    '''
+    """
     desc = callback.__doc__ or ''
     help = desc.strip().split('\n')[0]
     arguments = getattr(callback, 'arguments', [])
@@ -78,14 +79,6 @@ def find_resource(manager, name_or_id):
         # This is temporary measure to prevent ugly errors on CLI.
         # Make this just 'pass' after we implement finding by name.
         msg = "No %s with ID of '%s' exists." % \
-              (manager.resource_class.__name__.lower(), name_or_id)
-        raise exc.CommandError(msg)
-
-    # finally try to find entity by name
-    try:
-        return manager.find(name=name_or_id)
-    except exc.NotFound:
-        msg = "No %s with a name or ID of '%s' exists." % \
               (manager.resource_class.__name__.lower(), name_or_id)
         raise exc.CommandError(msg)
 
@@ -140,61 +133,83 @@ def exit(msg=''):
     sys.exit(1)
 
 
+def format_key_value(params):
+    """Parse a list of k=v strings into an iterator of (k,v).
+
+    :raises: CommandError
+    """
+    if not params:
+        raise StopIteration
+
+    for param in params:
+        try:
+            (name, value) = param.split(('='), 1)
+        except ValueError:
+            msg = _('Malformed parameter({0}). Use the key=value format.')
+            raise exc.CommandError(msg.format(param))
+        yield name, value
+
+
 def format_attributes(params):
-    '''Reformat attributes into dict of format expected by the API.'''
+    """Reformat CLI attributes into the structure expected by the API.
 
-    if not params:
-        return {}
+    The format expected by the API for attributes is a dictionary consisting
+    of only string keys and values.
 
-    # expect multiple invocations of --parameters but fall back
-    # to ; delimited if only one --parameters is specified
-    if len(params) == 1:
-        params = params[0].split(';')
+    :raises: ValidationError
+    """
+    attributes = {}
 
-    parameters = {}
-    for p in params:
-        try:
-            (n, v) = p.split(('='), 1)
-        except ValueError:
-            msg = '%s(%s). %s.' % ('Malformed parameter', p,
-                                   'Use the key=value format')
-            raise exc.CommandError(msg)
+    for key, value in format_key_value(params):
 
-        if n not in parameters:
-            parameters[n] = v
-        else:
-            if not isinstance(parameters[n], list):
-                parameters[n] = [parameters[n]]
-            parameters[n].append(v)
+        if key in attributes:
+            raise exc.ValidationError(
+                _("The attribute name {0} can't be given twice.").format(key))
 
-    return parameters
+        attributes[key] = value
+
+    return attributes
 
 
-def format_roles(params):
-    '''Reformat attributes into dict of format expected by the API.'''
+def format_roles(params, role_name_ids):
+    """Reformat CLI roles into the structure expected by the API.
 
-    if not params:
-        return []
+    The format expected by the API for roles is a list of dictionaries
+    containing a key for the Overcloud Role (overcloud_role_id) and a key for
+    the role count (num_nodes). Both values should be integers.
 
-    # expect multiple invocations of --parameters but fall back
-    # to ; delimited if only one --parameters is specified
-    if len(params) == 1:
-        params = params[0].split(';')
+    If there is no entry in role_name_ids for a given role, it is assumed
+    the user specified the role ID instead.
 
-    parameters = []
-    for p in params:
-        try:
-            (n, v) = p.split(('='), 1)
-        except ValueError:
-            msg = '%s(%s). %s.' % ('Malformed parameter', p,
-                                   'Use the key=value format')
-            raise exc.CommandError(msg)
+    :param params: list of key-value pairs specified in the format key=value
+    :type  params: list of str
 
-        v = int(v)
+    :param role_name_ids: mapping of role name (str) to its ID (int)
+    :type  role_name_ids: dict
 
-        parameters.append({
-            'overcloud_role_id': n,
-            'num_nodes': v
+    :raises: ValidationError
+    """
+    # A list of the role ID's being used so we can look out for duplicates.
+    added_role_ids = []
+
+    # The list of roles structured for the API.
+    roles = []
+
+    for name_or_id, value in format_key_value(params):
+
+        # If a role with the given name is found, use it's ID. If one
+        # cannot be found, assume the given parameter is an ID and use that.
+        key = role_name_ids.get(name_or_id, name_or_id)
+        value = int(value)
+
+        if key in added_role_ids:
+            raise exc.ValidationError(
+                _("The attribute name {0} can't be given twice.").format(key))
+
+        added_role_ids.append(key)
+        roles.append({
+            'overcloud_role_id': key,
+            'num_nodes': value
         })
 
-    return parameters
+    return roles
