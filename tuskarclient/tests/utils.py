@@ -11,16 +11,14 @@
 #    under the License.
 
 import argparse
-import copy
-import fixtures
 from gettext import gettext as _
 import os
 import sys
 
+import fixtures
 from six import StringIO
 import testtools
 
-from tuskarclient.common import http
 from tuskarclient import shell
 
 
@@ -36,6 +34,55 @@ class TestCase(testtools.TestCase):
                 os.environ.get('OS_STDERR_CAPTURE') == '1'):
             stderr = self.useFixture(fixtures.StringStream('stderr')).stream
             self.useFixture(fixtures.MonkeyPatch('sys.stderr', stderr))
+
+
+class HasManager(object):
+
+    def __init__(self, cls_name, attr_name):
+        self.cls_name = cls_name
+        self.attr_name = attr_name
+
+    def match(self, client):
+        if not hasattr(client, self.attr_name):
+            return ManagerClassMismatch(client, self.cls_name, self.attr_name)
+
+        obj = getattr(client, self.attr_name)
+        if self.cls_name != obj.__class__.__name__:
+            return ManagerClassMismatch(client, self.cls_name, self.attr_name)
+        else:
+            return None
+
+
+class ManagerClassMismatch(object):
+
+    def __init__(self, client, cls_name, attr_name):
+        self.client = client
+        self.cls_name = cls_name
+        self.attr_name = attr_name
+
+    def describe(self):
+        return "Class %r mismatch for attribute %r on %r" % (
+            self.cls_name, self.attr_name, self.client)
+
+    def get_details(self):
+        return {}
+
+
+class IsMethodOn(object):
+    """Match if there is method with same name on object."""
+    def __init__(self, obj):
+        self.obj = obj
+
+    def __str__(self):
+        return 'IsMethodOn(%s)' % (self.obj)
+
+    def match(self, method_name):
+        result = hasattr(self.obj, method_name)
+        if result:
+            return None
+        else:
+            return testtools.matchers.Mismatch("%s is not a method on %s" %
+                                               (method_name, self.obj))
 
 
 class CommandTestCase(TestCase):
@@ -142,8 +189,8 @@ class CommandOutputMissingMismatch(object):
         self.out_inc = out_inc
 
     def describe(self):
-        return "%s '%s' should contain '%s'"\
-            % (self.type, self.out, self.out_inc)
+        return "%s '%s' should contain '%s'" % (
+            self.type, self.out, self.out_inc)
 
     def get_details(self):
         return {}
@@ -159,8 +206,8 @@ class CommandOutputExtraMismatch(object):
         self.out_exc = out_exc
 
     def describe(self):
-        return "%s '%s' should not contain '%s'"\
-            % (self.type, self.out, self.out_exc)
+        return "%s '%s' should not contain '%s'" % (
+            self.type, self.out, self.out_exc)
 
     def get_details(self):
         return {}
@@ -172,8 +219,8 @@ class CommandOutputReturnCodeMismatch(object):
         self.ret_exp = ret_exp
 
     def describe(self):
-        return "Return code is '%s' but expected '%s'"\
-            % (self.ret, self.ret_exp)
+        return "Return code is '%s' but expected '%s'" % (
+            self.ret, self.ret_exp)
 
     def get_details(self):
         return {}
@@ -226,45 +273,6 @@ class ArgumentParserForTests(argparse.ArgumentParser):
             if file is None:
                 file = self.err
             file.write(message)
-
-
-class FakeAPI(object):
-    def __init__(self, fixtures):
-        self.fixtures = fixtures
-        self.calls = []
-
-    def _request(self, method, url, headers=None, body=None):
-        call = (method, url, headers or {}, body)
-        self.calls.append(call)
-        return self.fixtures[url][method]
-
-    def raw_request(self, *args, **kwargs):
-        fixture = self._request(*args, **kwargs)
-        body_iter = http.ResponseBodyIterator(
-            StringIO.StringIO(fixture[1]))
-        return FakeResponse(fixture[0]), body_iter
-
-    def json_request(self, *args, **kwargs):
-        fixture = self._request(*args, **kwargs)
-        return FakeResponse(fixture[0]), fixture[1]
-
-
-class FakeResponse(object):
-    def __init__(self, headers, body=None, version=None):
-        """:param headers: dict representing HTTP response headers
-        :param body: file-like object
-        """
-        self.headers = headers
-        self.body = body
-
-    def getheaders(self):
-        return copy.deepcopy(self.headers).items()
-
-    def getheader(self, key, default):
-        return self.headers.get(key, default)
-
-    def read(self, amt):
-        return self.body.read(amt)
 
 
 def create_test_dictionary_pair(default_keys, redundant_keys, missing_keys,

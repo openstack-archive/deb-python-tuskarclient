@@ -15,13 +15,17 @@
 
 from __future__ import print_function
 
-import os
-import sys
 import uuid
 
+from oslo.utils import importutils
+
 from tuskarclient.openstack.common.apiclient import exceptions as exc
+from tuskarclient.openstack.common import cliutils
 from tuskarclient.openstack.common.gettextutils import _
-from tuskarclient.openstack.common import importutils
+
+# Using common methods from oslo cliutils
+arg = cliutils.arg
+env = cliutils.env
 
 
 def define_commands_from_module(subparsers, command_module):
@@ -52,16 +56,6 @@ def define_command(subparsers, command, callback):
     subparser.set_defaults(func=callback)
 
 
-# Decorator for cli-args
-def arg(*args, **kwargs):
-    def _decorator(func):
-        # Because of the sematics of decorator composition if we just append
-        # to the options list positional options will appear to be backwards.
-        func.__dict__.setdefault('arguments', []).insert(0, (args, kwargs))
-        return func
-    return _decorator
-
-
 def find_resource(manager, name_or_id):
     """Helper for the _find_* methods."""
     # first try to get entity as integer id
@@ -76,48 +70,26 @@ def find_resource(manager, name_or_id):
         uuid.UUID(str(name_or_id))
         return manager.get(name_or_id)
     except (ValueError, exc.NotFound):
-        # This is temporary measure to prevent ugly errors on CLI.
-        # Make this just 'pass' after we implement finding by name.
-        msg = "No %s with ID of '%s' exists." % \
-              (manager.resource_class.__name__.lower(), name_or_id)
+        pass
+
+    # finally try to find the entity by name
+    resource = getattr(manager, 'resource_class', None)
+    attr = resource.NAME_ATTR if resource else 'name'
+
+    listing = manager.list()
+    matches = [obj for obj in listing if getattr(obj, attr) == name_or_id]
+
+    num_matches = len(matches)
+    if num_matches == 0:
+        msg = "No %s with name '%s' exists." % (
+              manager.resource_class.__name__.lower(), name_or_id)
+        raise exc.CommandError(msg)
+    elif num_matches > 1:
+        msg = "Multiple instances of %s with name '%s' exist." % (
+              manager.resource_class.__name__.lower(), name_or_id)
         raise exc.CommandError(msg)
 
-
-def marshal_association(args, resource_dict, assoc_name):
-    """Marshal resource association into an API request dict.
-
-    Distinguish between 3 cases:
-
-    - when the value in args is present, set the value in dict too,
-    - when the value in args is an empty string, set the value in dict
-      to none,
-    - when the value in args is None, it means the user did not specify
-      it on the command line and it should not be present in the dict
-      (important for update).
-    """
-    assoc_value = getattr(args, assoc_name, None)
-    if assoc_value == '':
-        resource_dict[assoc_name] = None
-    elif assoc_value:
-        # TODO(jistr): support for selecting resources by name
-        resource_dict[assoc_name] = {'id': assoc_value}
-
-
-def string_to_bool(arg):
-    return arg.strip().lower() in ('t', 'true', 'yes', '1')
-
-
-def env(*vars, **kwargs):
-    """Search for the first defined of possibly many env vars
-
-    Returns the first environment variable defined in vars, or
-    returns the default defined in kwargs.
-    """
-    for v in vars:
-        value = os.environ.get(v, None)
-        if value:
-            return value
-    return kwargs.get('default', '')
+    return matches[0]
 
 
 def import_versioned_module(version, submodule=None):
@@ -125,12 +97,6 @@ def import_versioned_module(version, submodule=None):
     if submodule:
         module = '.'.join((module, submodule))
     return importutils.import_module(module)
-
-
-def exit(msg=''):
-    if msg:
-        print(msg, file=sys.stderr)
-    sys.exit(1)
 
 
 def format_key_value(params):
@@ -169,47 +135,3 @@ def format_attributes(params):
         attributes[key] = value
 
     return attributes
-
-
-def format_roles(params, role_name_ids):
-    """Reformat CLI roles into the structure expected by the API.
-
-    The format expected by the API for roles is a list of dictionaries
-    containing a key for the Overcloud Role (overcloud_role_id) and a key for
-    the role count (num_nodes). Both values should be integers.
-
-    If there is no entry in role_name_ids for a given role, it is assumed
-    the user specified the role ID instead.
-
-    :param params: list of key-value pairs specified in the format key=value
-    :type  params: list of str
-
-    :param role_name_ids: mapping of role name (str) to its ID (int)
-    :type  role_name_ids: dict
-
-    :raises: ValidationError
-    """
-    # A list of the role ID's being used so we can look out for duplicates.
-    added_role_ids = []
-
-    # The list of roles structured for the API.
-    roles = []
-
-    for name_or_id, value in format_key_value(params):
-
-        # If a role with the given name is found, use it's ID. If one
-        # cannot be found, assume the given parameter is an ID and use that.
-        key = role_name_ids.get(name_or_id, name_or_id)
-        value = int(value)
-
-        if key in added_role_ids:
-            raise exc.ValidationError(
-                _("The attribute name {0} can't be given twice.").format(key))
-
-        added_role_ids.append(key)
-        roles.append({
-            'overcloud_role_id': key,
-            'num_nodes': value
-        })
-
-    return roles

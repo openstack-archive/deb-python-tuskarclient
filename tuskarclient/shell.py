@@ -21,11 +21,13 @@ import logging
 import logging.handlers
 import sys
 
+import six
+
+import tuskarclient
 from tuskarclient import client
 import tuskarclient.common.utils as utils
 from tuskarclient.openstack.common.apiclient import exceptions as exc
 
-logging.basicConfig()
 logger = logging.getLogger(__name__)
 
 
@@ -43,21 +45,23 @@ class TuskarShell(object):
 
     def _prepare_parsers(self):
         nonversioned_parser = self._nonversioned_parser()
-        self.partial_args =\
-            nonversioned_parser.parse_known_args(self.raw_args)[0]
-        self.parser, self.subparsers =\
-            self._parser(self.partial_args.tuskar_api_version)
+        self.partial_args = (
+            nonversioned_parser.parse_known_args(self.raw_args)[0])
+        self.parser, self.subparsers = (
+            self._parser(self.partial_args.tuskar_api_version))
 
     def run(self):
         '''Run the CLI. Parse arguments and do the respective action.'''
 
         # run self.do_help() if we have no raw_args at all or just -h/--help
-        if not self.raw_args\
-                or self.raw_args in (['-h'], ['--help']):
+        if (not self.raw_args
+                or self.raw_args in (['-h'], ['--help'])):
             self.do_help(self.partial_args)
             return 0
 
         args = self.parser.parse_args(self.raw_args)
+
+        self._setup_logging(args.debug)
 
         # run self.do_help() if we have help subcommand or -h/--help option
         if args.func == self.do_help or args.help:
@@ -66,8 +70,8 @@ class TuskarShell(object):
 
         self._ensure_auth_info(args)
 
-        tuskar_client = client.get_client(self.partial_args.tuskar_api_version,
-                                          **args.__dict__)
+        tuskar_client = client.get_client(
+            self.partial_args.tuskar_api_version, **args.__dict__)
         args.func(tuskar_client, args)
 
     def _ensure_auth_info(self, args):
@@ -132,6 +136,16 @@ class TuskarShell(object):
                             help="Print this help message and exit.",
                             )
 
+        parser.add_argument('--version',
+                            action='version',
+                            version=tuskarclient.__version__,
+                            help="Shows the client version and exits.")
+
+        parser.add_argument('-d', '--debug',
+                            default=bool(utils.env('TUSKARCLIENT_DEBUG')),
+                            action='store_true',
+                            help='Defaults to env[TUSKARCLIENT_DEBUG].')
+
         parser.add_argument('--os-username',
                             default=utils.env('OS_USERNAME'),
                             help='Defaults to env[OS_USERNAME]',
@@ -178,7 +192,8 @@ class TuskarShell(object):
                             )
 
         parser.add_argument('--os-auth-token',
-                            default=utils.env('OS_AUTH_TOKEN'),
+                            default=utils.env('OS_AUTH_TOKEN',
+                                              default=None),
                             help='Defaults to env[OS_AUTH_TOKEN]')
 
         parser.add_argument('--os_auth_token',
@@ -193,9 +208,9 @@ class TuskarShell(object):
 
         parser.add_argument('--tuskar-api-version',
                             default=utils.env('TUSKAR_API_VERSION',
-                                              default='1'),
+                                              default='2'),
                             help='Defaults to env[TUSKAR_API_VERSION] '
-                            'or 1')
+                            'or 2')
 
         parser.add_argument('--tuskar_api_version',
                             help=argparse.SUPPRESS)
@@ -218,12 +233,18 @@ class TuskarShell(object):
             # print general help
             self.parser.print_help()
 
+    def _setup_logging(self, debug):
+        log_lvl = logging.DEBUG if debug else logging.WARNING
+        logging.basicConfig(
+            format="%(levelname)s (%(module)s) %(message)s",
+            level=log_lvl)
+
 
 def main():
     try:
         TuskarShell(sys.argv[1:]).run()
     except exc.CommandError as e:
-        print(e.message, file=sys.stderr)
+        print(six.text_type(e), file=sys.stderr)
     except Exception as e:
         logger.exception("Exiting due to an error:")
         sys.exit(1)

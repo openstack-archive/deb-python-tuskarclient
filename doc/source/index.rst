@@ -21,11 +21,15 @@ Reference
 
     ref/index
     ref/v1/index
+    ref/v2/index
 
 Command-line Tool
 =================
 
-The client can also be used with the CLI.
+.. toctree::
+    :maxdepth: 1
+
+    cli/v2/index
 
 Man Pages
 =========
@@ -44,4 +48,4 @@ using `Gerrit`_.
 
 .. _on OpenStack git: http://git.openstack.org/cgit/openstack/python-tuskarclient
 .. _Launchpad: https://launchpad.net/python-tuskarclient
-.. _Gerrit: http://wiki.openstack.org/GerritWorkflow
+.. _Gerrit: http://docs.openstack.org/infra/manual/developers.html#development-workflow

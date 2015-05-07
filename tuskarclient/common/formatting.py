@@ -17,8 +17,22 @@ import sys
 import prettytable
 
 
-def pretty_choice_list(l):
-    return ', '.join("'%s'" % i for i in l)
+def attributes_formatter(attributes):
+    """Given a simple dict format the keyvalue pairs with one on each line.
+    """
+    return u"".join(u"{0}={1}\n".format(k, v) for k, v in
+                    sorted(attributes.items()))
+
+
+def parameters_v2_formatter(parameters):
+    """Given a list of dicts format parameters output."""
+    return u"\n".join(attributes_formatter(parameter)
+                      for parameter in parameters)
+
+
+def list_plan_roles_formatter(roles):
+    """Given a list of Roles format roles' names into row."""
+    return u", ".join(role.name for role in roles)
 
 
 def print_list(objs, fields, formatters={}, custom_labels={}, sortby=0,
@@ -88,48 +102,3 @@ def print_dict(d, formatters={}, custom_labels={}, outfile=sys.stdout):
         else:
             pt.add_row([label, d[field]])
     print(pt.get_string(sortby='Property'), file=outfile)
-
-
-def attr_proxy(attr, formatter=lambda a: a, allow_undefined=True):
-    '''Creates a new formatter function. It will format an object for
-    output by printing it's attribute or running another formatter on
-    that attribute.
-
-    :param attr: name of the attribute to look for on an object
-    :param formatter: formatter to run on that attribute (if not given,
-        the attribute is returned as-is)
-    :param allow_undefined: if true, the created function will return
-        None if `attr` is not defined on the formatted object
-    '''
-    def formatter_proxy(obj):
-        try:
-            attr_value = getattr(obj, attr)
-        except AttributeError as e:
-            if allow_undefined:
-                return None
-            else:
-                raise e
-        return formatter(attr_value)
-
-    return formatter_proxy
-
-
-def attributes_formatter(attributes):
-    """Given a simple dict format the keyvalue pairs with one on each line.
-    """
-    return u"".join(u"{0}={1}\n".format(k, v) for k, v in
-                    sorted(attributes.items()))
-
-
-def counts_formatter(counts):
-    """Given a list of dicts that represent Overcloud Roles output the
-    Overcloud Role ID with the num_noces
-    """
-
-    pretty_counts = []
-
-    for count in counts:
-        line = "{0}={1}".format(count['overcloud_role_id'], count['num_nodes'])
-        pretty_counts.append(line)
-
-    return u"\n".join(pretty_counts)

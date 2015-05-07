@@ -11,12 +11,12 @@
 #    under the License.
 
 from tuskarclient.common import utils
-from tuskarclient.v1 import overcloud_roles_shell
-from tuskarclient.v1 import overclouds_shell
+from tuskarclient.v2 import plans_shell
+from tuskarclient.v2 import roles_shell
 
 COMMAND_MODULES = [
-    overcloud_roles_shell,
-    overclouds_shell
+    plans_shell,
+    roles_shell
 ]
 
 
@@ -24,8 +24,9 @@ def enhance_parser(parser, subparsers):
     """Take a basic (nonversioned) parser and enhance it with
     commands and options specific for this version of API.
 
-    :param parser: top level parser :param subparsers: top level
-        parser's subparsers collection where subcommands will go
+    :param parser: top level parser
+    :param subparsers: top level parser's subparsers collection
+    where subcommands will go
     """
     for command_module in COMMAND_MODULES:
         utils.define_commands_from_module(subparsers, command_module)

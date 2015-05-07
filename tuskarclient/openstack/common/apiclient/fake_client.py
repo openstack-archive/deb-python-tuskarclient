@@ -21,6 +21,19 @@ wrong the tests might raise AssertionError. I've indicated in comments the
 places where actual behavior differs from the spec.
 """
 
+########################################################################
+#
+# THIS MODULE IS DEPRECATED
+#
+# Please refer to
+# https://etherpad.openstack.org/p/kilo-tuskarclient-library-proposals for
+# the discussion leading to this deprecation.
+#
+# We recommend checking out the python-openstacksdk project
+# (https://launchpad.net/python-openstacksdk) instead.
+#
+########################################################################
+
 # W0102: Dangerous default value %s as argument
 # pylint: disable=W0102
 
@@ -28,12 +41,14 @@ import json
 
 import requests
 import six
+from six.moves.urllib import parse
 
 from tuskarclient.openstack.common.apiclient import client
-from tuskarclient.openstack.common.py3kcompat import urlutils
 
 
-def assert_has_keys(dct, required=[], optional=[]):
+def assert_has_keys(dct, required=None, optional=None):
+    required = required or []
+    optional = optional or []
     for k in required:
         try:
             assert k in dct
@@ -79,7 +94,7 @@ class FakeHTTPClient(client.HTTPClient):
     def __init__(self, *args, **kwargs):
         self.callstack = []
         self.fixtures = kwargs.pop("fixtures", None) or {}
-        if not args and not "auth_plugin" in kwargs:
+        if not args and "auth_plugin" not in kwargs:
             args = (None, )
         super(FakeHTTPClient, self).__init__(*args, **kwargs)
 
@@ -147,7 +162,7 @@ class FakeHTTPClient(client.HTTPClient):
                                  "text": fixture[1]})
 
         # Call the method
-        args = urlutils.parse_qsl(urlutils.urlparse(url)[4])
+        args = parse.parse_qsl(parse.urlparse(url)[4])
         kwargs.update(args)
         munged_url = url.rsplit('?', 1)[0]
         munged_url = munged_url.strip('/').replace('/', '_').replace('.', '_')
@@ -166,6 +181,8 @@ class FakeHTTPClient(client.HTTPClient):
         else:
             status, body = resp
             headers = {}
+        self.last_request_id = headers.get('x-openstack-request-id',
+                                           'req-test')
         return TestResponse({
             "status_code": status,
             "text": body,
