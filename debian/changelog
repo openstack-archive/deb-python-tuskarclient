@@ -1,6 +1,7 @@
 python-tuskarclient (0.1.17-1) unstable; urgency=medium
 
   * New upstream release.
+  * Fixed (build-)depends for this release.
 
  -- Thomas Goirand <zigo@debian.org>  Thu, 07 May 2015 15:05:27 +0200
 
