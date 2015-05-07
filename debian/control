@@ -26,7 +26,7 @@ Build-Depends-Indep: python-babel,
                      python-testtools,
                      subunit,
                      testrepository,
-Standards-Version: 3.9.5
+Standards-Version: 3.9.6
 Homepage: https://github.com/openstack/python-tuskarclient
 Vcs-Git: git://anonscm.debian.org/openstack/python-tuskarclient.git
 Vcs-Browser: http://anonscm.debian.org/gitweb/?p=openstack/python-tuskarclient.git;a=summary
