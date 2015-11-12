@@ -1,3 +1,10 @@
+python-tuskarclient (0.1.18-1) unstable; urgency=medium
+
+  * New upstream release.
+  * Fixed (build-)depends for this release.
+
+ -- Thomas Goirand <zigo@debian.org>  Thu, 12 Nov 2015 14:59:50 +0100
+
 python-tuskarclient (0.1.17-2) unstable; urgency=medium
 
   * Making build reproducible (Closes: #782388). Thanks to Reiner Herrmann
