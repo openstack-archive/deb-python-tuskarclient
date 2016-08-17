@@ -1,0 +1,9 @@
+Code-Review+2: Marios Andreou <marios@redhat.com>
+Code-Review+2: Jiri Stransky <jistr@redhat.com>
+Workflow+1: Jiri Stransky <jistr@redhat.com>
+Verified+2: Jenkins
+Submitted-by: Jenkins
+Submitted-at: Tue, 12 May 2015 11:37:12 +0000
+Reviewed-on: https://review.openstack.org/179222
+Project: openstack/deb-python-tuskarclient
+Branch: refs/heads/master

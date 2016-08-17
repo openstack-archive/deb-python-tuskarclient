@@ -1,0 +1,10 @@
+Code-Review+1: Dougal Matthews <dougal@redhat.com>
+Code-Review+2: James Slagle <jslagle@redhat.com>
+Code-Review+2: Giulio Fidente <gfidente@redhat.com>
+Workflow+1: Giulio Fidente <gfidente@redhat.com>
+Verified+2: Jenkins
+Submitted-by: Jenkins
+Submitted-at: Tue, 16 Jun 2015 10:49:40 +0000
+Reviewed-on: https://review.openstack.org/190251
+Project: openstack/deb-python-tuskarclient
+Branch: refs/heads/master
